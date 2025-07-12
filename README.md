@@ -14,7 +14,7 @@ Endpoint untuk berkomunikasi (chatting) dengan chatbot JakSabang.
 - Endpoint: `/`
 - Headers:
 
-```json
+```bash
 Authorization: Bearer <TOKEN>
 ```
 
