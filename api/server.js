@@ -81,7 +81,7 @@ app.post("/", async (req, res) => {
         res.status(200).json(
             {
                 status: 200,
-                response: response,
+                response: response.content,
                 user: decoded,
             }
         );
