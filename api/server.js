@@ -1,7 +1,7 @@
 // Import modul yang dibutuhkan
 const express = require("express");
 const cors = require("cors");
-const Groq = require("groq-sdk");
+const openAi = require("openai");
 const { configDotenv } = require("dotenv");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
@@ -18,33 +18,35 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-// Inisialisasi Groq client
-const groq = new Groq(
-    { 
-        apiKey: process.env.API_KEY,
+// Inisialisasi OpenAI
+const openai = new openAi.OpenAI({
+    baseURL: process.env.BASE_URL,
+    apiKey: process.env.API_KEY,
+    defaultHeaders: {
+        "HTTP-Referer": process.env.JS_URL,
+        "X-Title": process.env.JS_URL,
     }
-);
+})
 
 // Fungsi untuk memanggil chatbot dengan pesan dan konteks
 async function callbot(message, context) {
     try {
-        const completions = await groq.chat.completions.create(
-            {
-                model: "llama3-70b-8192",
-                messages: [
-                    {
-                        role: "system",
-                        content: context,
-                    },
-                    {
-                        role: "user",
-                        content: message,
-                    },
-                ],
-            }
-        );
+        const completion = await openai.chat.completions.create({
+            model: process.env.MODEL,
+            reasoning_effort: "high",
+            messages: [
+                {
+                    role: "system",
+                    content: context
+                },
+                {
+                    role: "user",
+                    content: message
+                }
+            ]
+        });
 
-        return completions.choices[0]?.message?.content;
+        return completion.choices[0].message;
     }
     catch (error) {
         return error.message;
