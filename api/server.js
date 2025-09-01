@@ -5,12 +5,15 @@ const openAi = require("openai");
 const { configDotenv } = require("dotenv");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
+const googleAi = require("@google/genai");
 
 // Load environment variabel
 if (process.env.NODE_ENV !== "production") {
     configDotenv();
 }
 
+const GoogleGenAI = googleAi.GoogleGenAI;
+const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY})
 const app = express();
 
 // Middleware global
@@ -28,7 +31,7 @@ const openai = new openAi.OpenAI({
     }
 })
 
-// Fungsi untuk memanggil chatbot dengan pesan dan konteks
+// Fungsi untuk memanggil chatbot open router dengan pesan dan konteks
 async function callbot(message, context) {
     try {
         const completion = await openai.chat.completions.create({
@@ -47,6 +50,21 @@ async function callbot(message, context) {
         });
 
         return completion.choices[0].message;
+    }
+    catch (error) {
+        return error.message;
+    }
+}
+
+// Fungsi untuk memanggil chatbot gemini dengan pesan dan konteks
+async function callGemini(message, context) {
+    try {
+        const response = await ai.models.generateContent({
+            model: process.env.GEMINI_MODEL,
+            contents: context + "\n\n" + message,
+        })
+
+        return response.text;
     }
     catch (error) {
         return error.message;
@@ -73,15 +91,19 @@ app.post("/", async (req, res) => {
 
         // Verifikasi token JWT
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Model yang digunakan
+        const model = process.env.USE;
         
         // Definisi konteks chatbot
         const context = process.env.CONTEXT;
-        const response = await callbot(message, context);
+        const response = (model === "gemini" ? await callGemini(message, context) : model === "open-router" ? await callbot(message, context) : "Model is undefined");
 
         res.status(200).json(
             {
                 status: 200,
-                response: response.content,
+                response: response,
+                model: model,
                 user: decoded,
             }
         );
