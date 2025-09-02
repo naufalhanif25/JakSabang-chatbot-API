@@ -74,23 +74,23 @@ async function callGemini(message, context) {
 // Endpoint utama '/'
 app.post("/", async (req, res) => {
     const message = req.body.message;
-    const auth = req.headers.authorization;
+    // const auth = req.headers.authorization;
 
-    if (!auth || !auth.startsWith("Bearer ")) {
-        res.status(401).json(
-            {
-                status: 401,
-                response: "Invalid or expired token",
-            }
-        );
-    }
+    // if (!auth || !auth.startsWith("Bearer ")) {
+    //     res.status(401).json(
+    //         {
+    //             status: 401,
+    //             response: "Invalid or expired token",
+    //         }
+    //     );
+    // }
 
     try {
-        // Split token
-        const token = auth.split(" ")[1];
+        // // Split token
+        // const token = auth.split(" ")[1];
 
-        // Verifikasi token JWT
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // // Verifikasi token JWT
+        // const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Model yang digunakan
         const model = process.env.USE;
@@ -104,7 +104,7 @@ app.post("/", async (req, res) => {
                 status: 200,
                 response: response,
                 model: model,
-                user: decoded,
+                // user: decoded,
             }
         );
     } 
