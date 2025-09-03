@@ -6,11 +6,17 @@ const { configDotenv } = require("dotenv");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const googleAi = require("@google/genai");
+const GroqLib = require("groq-sdk");
+const Groq = GroqLib.Groq;
 
 // Load environment variabel
 if (process.env.NODE_ENV !== "production") {
     configDotenv();
 }
+
+const groq = new Groq({
+    apiKey: process.env.GROQ_API
+})
 
 const GoogleGenAI = googleAi.GoogleGenAI;
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY})
@@ -56,6 +62,24 @@ async function callbot(message, context) {
     }
 }
 
+async function callGroq(message, context) {
+    const chatCompletion = await groq.chat.completions.create({
+        messages: [
+            {
+                role: "user",
+                content: message
+            },
+            {
+                role: "system",
+                content: context
+            }
+        ],
+        model: process.env.GROQ_MODEL
+    });
+
+    return chatCompletion.choices[0]?.message?.content
+}
+
 // Fungsi untuk memanggil chatbot gemini dengan pesan dan konteks
 async function callGemini(message, context) {
     try {
@@ -97,12 +121,12 @@ app.post("/", async (req, res) => {
         
         // Definisi konteks chatbot
         const context = process.env.CONTEXT;
-        const response = (model === "gemini" ? await callGemini(message, context) : model === "open-router" ? await callbot(message, context) : "Model is undefined");
+        const response = (model === "gemini" ? await callGemini(message, context) : model === "open-router" ? await callbot(message, context) : model === "groq" ? callGroq(message, context) : "Model is undefined");
 
         res.status(200).json(
             {
                 status: 200,
-                response: response,
+                response: (model === "gemini" || model === "groq" ? response : model === "open-router" ? response.content : response),
                 model: model,
                 // user: decoded,
             }
