@@ -121,12 +121,13 @@ app.post("/", async (req, res) => {
         
         // Definisi konteks chatbot
         const context = process.env.CONTEXT;
-        const response = (model === "gemini" ? await callGemini(message, context) : model === "open-router" ? await callbot(message, context) : model === "groq" ? callGroq(message, context) : "Model is undefined");
+        // const response = (model === "gemini" ? await callGemini(message, context) : model === "open-router" ? await callbot(message, context) : model === "groq" ? callGroq(message, context) : "Model is undefined");
 
+        const response = await callGroq(message, context);
         res.status(200).json(
             {
                 status: 200,
-                response: (model === "gemini" || model === "groq" ? response : model === "open-router" ? response.content : response),
+                response: response,
                 model: model,
                 // user: decoded,
             }
